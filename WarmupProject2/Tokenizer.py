@@ -44,9 +44,4 @@ class Tokenizer:
             elif self.input[self.index:].startswith(token):
                 self.token = token
                 break
-
-    def getSym(self):
-        self.skipWhiteSpace()
-        if self.index < self.length:
-            return self.input[self.index]
     
