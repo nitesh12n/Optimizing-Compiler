@@ -19,11 +19,11 @@ class Tokenizer:
     def match(self, token):
         self.skipWhiteSpace()
         if isinstance(token, re.Pattern):
-            match = re.match(token, self.input[self.index:])
+            match = re.match(token, self.token)
             if match != None:
                 return True
 
-        elif self.input[self.index:].startswith(token):
+        elif self.token == token:
                 return True
         
         return False
