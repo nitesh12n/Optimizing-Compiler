@@ -93,7 +93,7 @@ class Parser:
         return val
 
 def main():
-    inputString = "computation var var <- 2 * 3; var abracadabra <- 7; (((abracadabra * var))); var - 5 - 1 ."
+    inputString = "computation var i <- 2 * 3; var abracadabra <- 7; (((abracadabra * i))); i - 5 - 1 ."
     #inputString = input("Enter the input:\n")
     p = Parser(inputString)
     results = p.computation()
