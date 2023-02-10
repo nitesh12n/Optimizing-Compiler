@@ -31,7 +31,7 @@ class Tokenizer:
 
 
     def skipWhiteSpace(self):
-        while(self.index < self.length and self.input[self.index] == ' '):
+        while(self.index < self.length and self.input[self.index].isspace()):
             self.index+=1
 
     def tokenize(self):
