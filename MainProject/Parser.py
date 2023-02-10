@@ -189,7 +189,7 @@ def main():
 
     inFile = sys.argv[1]
     ##debug
-    #inFile = "MainProject/Examples/Code4.smpl"
+    #inFile = "MainProject/Examples/Code3.smpl"
     with open(inFile,'r') as i:
         inputString = i.read()
         
@@ -197,7 +197,7 @@ def main():
     p.computation()
 
     dotGraph = DotGraph()
-    graph = dotGraph.get_representation(p.ssa.graph)
+    graph = dotGraph.getRepresentation(p.ssa.graph)
     print(graph)
 
 
