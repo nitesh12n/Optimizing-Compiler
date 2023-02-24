@@ -1,0 +1,15 @@
+main
+var i, j, out, y;
+{
+    let i <- 1;
+    let j <- i;
+    let out <- j + 5;
+    while i < 20 do
+        let y <- j - 5;
+        let i <- j + 5;
+    od;
+call OutputNum(out);
+call OutputNum(i);
+call OutputNum(j);
+call OutputNum(y);
+}.

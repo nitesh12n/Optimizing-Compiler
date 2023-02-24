@@ -4,8 +4,8 @@ class ControlFlowGraph:
     def __init__(self):
         self.blocks = []
 
-    def createNewBlock(self):
-        block = BasicBlock()
+    def createNewBlock(self, initSearchStructure = False):
+        block = BasicBlock(initSearchStructure)
         self.blocks.append(block)
         return block
 

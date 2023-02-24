@@ -35,6 +35,7 @@ class Parser:
         return self.evaluateExpression()
 
     def consumeVar(self, rootDefaultInst):
+
         self.consume(Token.VAR)
         ident = self.getAndConsumeIdentifier()
         self.ssa.updateSymbolTable(ident, rootDefaultInst)
@@ -66,7 +67,31 @@ class Parser:
                 self.consumeCallStatement()
             elif self.match(Token.IF):
                 self.consumeIfStatement()
+            elif self.match(Token.WHILE):
+                self.consumeWhileStatement()
+    
+    def consumeWhileStatement(self):
+        self.consume(Token.WHILE)
+        branch, fallThrough, join = self.ssa.createWhileBlocks()
+        relOp, cmpInstruction = self.consumeRelation()
+        self.ssa.createInstructionInActiveBlock(relOp, Instruction.InstructionTwoOperand, cmpInstruction, branch.instructions[0])
+        self.consume(Token.DO)
+
+        self.ssa.activeBlock = fallThrough
+        self.consumeStatements()
+
+        ##should we create at the end?
+        self.ssa.createInstructionInActiveBlock(Opcode.BRA, Instruction.InstructionOneOperand, join.instructions[0])
         
+        ##update second parameter of phi
+        self.ssa.updatePhi(branch, self.ssa.activeBlock, join)
+
+        self.consume(Token.OD)
+        if self.match(Token.SEMI_COLON):
+            self.consume(Token.SEMI_COLON)
+        
+        self.ssa.activeBlock = branch
+
     def consumeIfStatement(self):
         
         self.consume(Token.IF)        
@@ -77,7 +102,7 @@ class Parser:
 
         self.ssa.activeBlock = fallThrough
         self.consumeStatements()
-        self.ssa.createNewInstruction(Opcode.BRA, Instruction.InstructionOneOperand, join.instructions[0])
+        self.ssa.createInstructionInActiveBlock(Opcode.BRA, Instruction.InstructionOneOperand, join.instructions[0])
         
         if self.match(Token.ELSE):
             self.consume(Token.ELSE)
@@ -95,7 +120,7 @@ class Parser:
         leftOperand = self.getAndConsumeExpression()
         relOp = self.getAndConsumeRelOp()
         rightOperand = self.getAndConsumeExpression()
-        instruction = self.ssa.createNewInstruction(Opcode.CMP, Instruction.InstructionTwoOperand, leftOperand, rightOperand)
+        instruction = self.ssa.createInstructionInActiveBlock(Opcode.CMP, Instruction.InstructionTwoOperand, leftOperand, rightOperand)
 
         return relOp, instruction
 
@@ -109,11 +134,11 @@ class Parser:
         if self.match(Token.WRITE):
             self.consume(Token.WRITE)
             ident = self.getAndConsumeIdentifier()
-            self.ssa.createNewInstruction(Opcode.WRITE, Instruction.InstructionOneOperand, self.ssa.getSymbolValue(ident))
+            self.ssa.createInstructionInActiveBlock(Opcode.WRITE, Instruction.InstructionOneOperand, self.ssa.getSymbolValue(ident))
             self.consume(Token.CPAREN)
         elif self.match(Token.WRITENEWLINE):
             self.consume(Token.WRITENEWLINE)
-            self.ssa.createNewInstruction(Opcode.WRITENEWLINE, Instruction.InstructionZeroOperand)
+            self.ssa.createInstructionInActiveBlock(Opcode.WRITENEWLINE, Instruction.InstructionZeroOperand)
 
         self.consume(Token.SEMI_COLON)
 
@@ -125,7 +150,7 @@ class Parser:
             self.consume(Token.CALL)
             if self.match(Token.READINPUT):
                 self.consume(Token.READINPUT)
-                instruction = self.ssa.createNewInstruction(Opcode.READ, Instruction.InstructionZeroOperand)
+                instruction = self.ssa.createInstructionInActiveBlock(Opcode.READ, Instruction.InstructionZeroOperand)
         else:
             instruction = self.getAndConsumeExpression()
 
@@ -144,7 +169,7 @@ class Parser:
                 self.consume(Token.MINUS)
 
             operand2= self.term()
-            instruction = self.ssa.createNewInstruction(opcode, Instruction.InstructionTwoOperand, instruction, operand2)
+            instruction = self.ssa.createInstructionInActiveBlock(opcode, Instruction.InstructionTwoOperand, instruction, operand2)
 
         return instruction 
 
@@ -161,7 +186,7 @@ class Parser:
                 self.consume(Token.DIV)
 
             operand2 = self.factor()
-            instruction = self.ssa.createNewInstruction(opcode, Instruction.InstructionTwoOperand, instruction, operand2)
+            instruction = self.ssa.createInstructionInActiveBlock(opcode, Instruction.InstructionTwoOperand, instruction, operand2)
 
         return instruction
                 
@@ -183,21 +208,26 @@ class Parser:
 
         return instr
 
-
-
 def main():
 
-    inFile = sys.argv[1]
+    #inFile = sys.argv[1]
     ##debug
-    #inFile = "MainProject/Examples/Code3.smpl"
+    inFile = "MainProject/Examples/Code7.smpl"
     with open(inFile,'r') as i:
         inputString = i.read()
         
-    p = Parser(inputString)
-    p.computation()
+    parser = Parser(inputString)
+    parser.computation()
 
     dotGraph = DotGraph()
-    graph = dotGraph.getRepresentation(p.ssa.graph)
+    graph = dotGraph.getRepresentation(parser.ssa.graph)
+
+    blocks = parser.ssa.graph.blocks
+
+    for b in blocks:
+        print(b.blockName)
+        for ident, instr in b.symbolTable.items():
+            print(ident + ": " + str(instr.instructionNumber))
     print(graph)
 
 

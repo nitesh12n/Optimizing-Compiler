@@ -33,13 +33,12 @@ class DotGraph:
 
     def traverseBlocks(self, block):
         self.declarations.append(f"{block.blockName} [shape=record, label=\"<b>{block.blockName} | {self.traverseInstructions(block)}\"];")
-        fallthrough_label = ""
+        
         if block.branch is not None:
-            self.relations.append(f"{block.blockName}:s -> {block.branch.blockName}:n [label=\"branch\"];")
-            fallthrough_label = f"[label=\"fall-through\"]"
+            self.relations.append(f"{block.blockName}:s -> {block.branch.blockName}:n [color= darkorange,label=\"branch\"];")
         
         if block.fallThrough is not None:
-            self.relations.append(f"{block.blockName}:s -> {block.fallThrough.blockName}:n {fallthrough_label};")
+            self.relations.append(f"{block.blockName}:s -> {block.fallThrough.blockName}:n [color= darkgreen, label=\"FT\"];")
         
         if block.dominance is not None:
             self.relations.append(f"{block.dominance.blockName}:b -> {block.blockName}:b [color=blue, style=dotted, label=\"dom\"]")

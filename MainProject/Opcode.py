@@ -18,8 +18,7 @@ class Opcode:
     COND_GREATERTHANEQUAL = "blt",
     COND_LESSTHAN = "bge",
     COND_LESSTHANEQUAL = "bgt"
-    ValidOpcodesForSearch = [ADD, SUB, MUL, DIV, COND_EQUAL, COND_NOTEQUAL, COND_GREATERTHAN, 
-                        COND_GREATERTHANEQUAL, COND_LESSTHAN, COND_LESSTHANEQUAL, CMP]
+    ValidOpcodesForSearch = [ADD, SUB, MUL, DIV, CMP]
     CONDITIONS = {
         Token.COND_EQUAL : "bne",
         Token.COND_NOTEQUAL : "beq",

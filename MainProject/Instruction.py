@@ -10,6 +10,9 @@ class Instruction:
         Instruction.InstructionNumber+=1
         self.instructionNumber = Instruction.InstructionNumber
         self.instructionString = self.opcode
+        self.prevOpcodeInstr = None
+        self.block = None
+        self.deleteFlag = False
     
     def getInstructionString(self):
         instructionString = str(self.instructionNumber) + ": " + self.opcode
@@ -20,9 +23,15 @@ class Instruction:
                 instructionString+= " (" + str(self.operand1.instructionNumber) + ")"
         
         elif isinstance(self, Instruction_TwoOperand):
-            instructionString+= " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + str(self.operand2.instructionNumber) + ")"
+            operand2String = str(self.operand2.instructionNumber if self.operand2 != None else " ")
+            instructionString+= " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + operand2String + ")"
         self.instructionString = instructionString
         return instructionString
+    
+    def getInstructionFromSearchStructure(self):
+        operand1 = self.operand1 if (isinstance(self, Instruction_OneOperand) or isinstance(self, Instruction_TwoOperand)) else None
+        operand2 = self.operand2 if isinstance(self, Instruction_TwoOperand) else None
+        return self.block.searchInstruction(self.opcode, operand1, operand2, self)
     
 
 class Instruction_OneOperand(Instruction):
@@ -31,6 +40,7 @@ class Instruction_OneOperand(Instruction):
         super().__init__(opcode)
         self.operand1 = operand1 
         self.instructionString = self.opcode
+
         if isinstance(self.operand1, numbers.Number):
             self.instructionString+= "#" + str(self.operand1)
         elif isinstance(self.operand1, Instruction_OneOperand):
@@ -43,5 +53,7 @@ class Instruction_TwoOperand(Instruction):
         super().__init__(opcode)
         self.operand1 = operand1 
         self.operand2 = operand2 
-        self.instructionString = self.opcode + " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + str(self.operand2.instructionNumber) + ")"
+
+        operand2String = str(self.operand2.instructionNumber if self.operand2 != None else " ")
+        self.instructionString = self.opcode + " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + operand2String + ")"
 

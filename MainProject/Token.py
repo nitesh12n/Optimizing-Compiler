@@ -23,6 +23,8 @@ class Token:
     ELSE = "else"
     FI = "fi"
     WHILE = "while"
+    DO = "do"
+    OD = "od"
     RETURN = "return"
     COMMA = ","
     CALL="call"
