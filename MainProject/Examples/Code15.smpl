@@ -1,0 +1,32 @@
+main
+array[5] x;
+var a, b, c, d, e, f, g, h; {
+ let a <- call InputNum();
+ let b <- x[1];
+ let c <- x[2];
+ let e <- x[3];
+ let x[2] = b + a;
+ 
+ if a < 0 then 
+    let x[3] <- c; 
+    if b > 0 then
+        let x[1] <- d + e; 
+    else 
+        let d <- d + x[3]; 
+    fi
+ else 
+    let x[2] = c + 1; fi
+let e<-x[1];
+let f<-x[2];
+let g<-x[3];
+
+call OutputNum(d);
+call OutputNum(b);
+call OutputNum(a);
+call OutputNum(c);
+call OutputNum(e);
+call OutputNum(f);
+call OutputNum(g);
+
+
+}.

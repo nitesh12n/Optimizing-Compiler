@@ -1,15 +1,17 @@
 main
-var a, b, c, d, e; {
- let a <- call InputNum();
- let b <- a;
- let c <- b;
- let d <- b + c;
- let e <- a + b;
- if a < 0 then 
-    let d <- d + e; 
-    let a <- d 
- else 
-    let d <- e 
- fi;
- call OutputNum(a)
+var a, b, c, d, e;
+var f;
+ {
+let a <- call InputNum();
+let b <- 0;
+let e <- d;
+let a<-e + b + c;
+let f<-a
+call OutputNum(a);
+call OutputNum(b);
+call OutputNum(c);
+call OutputNum(d);
+call OutputNum(e);
+call OutputNum(f);
+
 }.

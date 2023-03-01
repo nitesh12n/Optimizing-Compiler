@@ -3,10 +3,11 @@ from Instruction import Instruction
 from SSA import SSA
 from  Token import Token
 from Opcode import Opcode 
-from DotGraph import DotGraph 
-import sys
-class Parser:
 
+class Parser:
+    INTEGER_SIZE = 4
+    UNDEFINED_INT = 9999
+    BASE_CONST = "#BASE"
     def __init__(self, input):
         self.tokenizer = Tokenizer(input)
         self.ssa = SSA()
@@ -34,29 +35,57 @@ class Parser:
     def getAndConsumeExpression(self):
         return self.evaluateExpression()
 
-    def consumeVar(self, rootDefaultInst):
+    def consumeVar(self):
 
         self.consume(Token.VAR)
         ident = self.getAndConsumeIdentifier()
+        rootDefaultInst = self.ssa.createOrGetRootInstruction(self.UNDEFINED_INT)
         self.ssa.updateSymbolTable(ident, rootDefaultInst)
         while self.match(Token.COMMA):
             self.consume(Token.COMMA)
             ident = self.getAndConsumeIdentifier()
             self.ssa.updateSymbolTable(ident, rootDefaultInst)
-
         self.consume(Token.SEMI_COLON)
+    
+    def consumeArrayDeclaration(self):
 
+        self.consume(Token.ARRAY)
+        #self.ssa.createOrGetRootInstruction(self.INTEGER_SIZE)
+        #self.ssa.createOrGetRootInstruction(self.BASE_CONST)
+
+        while self.match(Token.SQUARE_OPAREN):
+            self.consume(Token.SQUARE_OPAREN)
+            self.consume(Token.NUMBERS)
+            self.consume(Token.SQUARE_CPAREN)
+            
+        self.consumeArrayIdentifier()
+        while self.match(Token.COMMA):
+            self.consume(Token.COMMA)
+            self.consumeArrayIdentifier()          
+        self.consume(Token.SEMI_COLON)        
+
+    def consumeArrayIdentifier(self):
+        ident = self.getAndConsumeIdentifier()
+        #value = self.getArrayBaseAddressValue(ident)
+        #self.ssa.createOrGetRootInstruction(value)
+        
+    def getArrayBaseAddressValue(self, ident):
+        return f"#{ident}_base_adr"
+         
     def computation(self):
 
         self.consume(Token.MAIN)
-        rootDefaultInst = self.ssa.createRootInstruction(0)
-        while self.match(Token.VAR):
-            self.consumeVar(rootDefaultInst)
+        while self.matchAny([Token.VAR, Token.ARRAY]):
+            if self.match(Token.VAR):
+                self.consumeVar()
+            elif self.match(Token.ARRAY):
+                self.consumeArrayDeclaration()
 
         self.consume(Token.LCPAREN)
         self.consumeStatements()
         self.consume(Token.RCPAREN)
         self.consume(Token.DOT)
+        #self.ssa.removeInstructionFromRoot(rootDefaultInst)
 
     def consumeStatements(self):
 
@@ -84,8 +113,7 @@ class Parser:
         self.ssa.createInstructionInActiveBlock(Opcode.BRA, Instruction.InstructionOneOperand, join.instructions[0])
         
         ##update second parameter of phi
-        self.ssa.updatePhi(branch, self.ssa.activeBlock, join)
-
+        self.ssa.updateJoinForWhile(branch, self.ssa.activeBlock, join)
         self.consume(Token.OD)
         if self.match(Token.SEMI_COLON):
             self.consume(Token.SEMI_COLON)
@@ -141,10 +169,19 @@ class Parser:
             self.ssa.createInstructionInActiveBlock(Opcode.WRITENEWLINE, Instruction.InstructionZeroOperand)
 
         self.consume(Token.SEMI_COLON)
-
+    
     def consumeLetStatement(self):
         self.consume(Token.LET)
         ident = self.getAndConsumeIdentifier()
+
+        isArray = self.match(Token.SQUARE_OPAREN)
+        expression = None
+        if isArray:
+            #TODO:add support for multi dimensional array
+            self.consume(Token.SQUARE_OPAREN)
+            expression = self.getAndConsumeExpression()
+            self.consume(Token.SQUARE_CPAREN)
+                       
         self.consume(Token.ASSIGNMENT)
         if self.match(Token.CALL):
             self.consume(Token.CALL)
@@ -154,7 +191,19 @@ class Parser:
         else:
             instruction = self.getAndConsumeExpression()
 
-        self.ssa.updateSymbolTable(ident, instruction)
+        if isArray:
+            integerSizeInstr = self.ssa.createOrGetRootInstruction(self.INTEGER_SIZE)
+            mulInstruction = self.ssa.createInstructionInActiveBlock(Opcode.MUL, Instruction.InstructionTwoOperand, expression, integerSizeInstr)
+            baseInstruction = self.ssa.createOrGetRootInstruction(self.BASE_CONST)
+            baseAddrValue = self.ssa.createOrGetRootInstruction(self.getArrayBaseAddressValue(ident))
+            arrayBaseAdd = self.ssa.createInstructionInActiveBlock(Opcode.ADD, Instruction.InstructionTwoOperand, baseInstruction, baseAddrValue)           
+            reqAddress = self.ssa.createInstructionInActiveBlock(Opcode.ADDA, Instruction.InstructionTwoOperand, mulInstruction, arrayBaseAdd)
+            self.ssa.createInstructionInActiveBlock(Opcode.STORE, Instruction.InstructionTwoOperand, reqAddress, instruction)
+            self.ssa.updateSearchStructureForLoad(reqAddress)
+            self.ssa.activeBlock.kills.add(reqAddress)
+
+        else:
+            self.ssa.updateSymbolTable(ident, instruction)
         if self.match(Token.SEMI_COLON):
             self.consume(Token.SEMI_COLON)
 
@@ -168,7 +217,7 @@ class Parser:
                 opcode = Opcode.SUB
                 self.consume(Token.MINUS)
 
-            operand2= self.term()
+            operand2 = self.term()
             instruction = self.ssa.createInstructionInActiveBlock(opcode, Instruction.InstructionTwoOperand, instruction, operand2)
 
         return instruction 
@@ -199,38 +248,28 @@ class Parser:
         
         elif self.match(Token.NUMBERS):
             val = int(self.currentToken())
-            instr = self.ssa.createRootInstruction(val)
+            instr = self.ssa.createOrGetRootInstruction(val)
             self.consume(Token.NUMBERS)
 
         elif self.match(Token.IDENTIFIER):
             ident = self.getAndConsumeIdentifier()
-            instr = self.ssa.getSymbolValue(ident)
+            isArray = self.match(Token.SQUARE_OPAREN)
+            expression = None
+            if isArray:
+                #TODO:add support for multi dimensional array
+                self.consume(Token.SQUARE_OPAREN)
+                expression = self.getAndConsumeExpression()
+                integerSizeInstr = self.ssa.createOrGetRootInstruction(self.INTEGER_SIZE)
+                mulInstruction = self.ssa.createInstructionInActiveBlock(Opcode.MUL, Instruction.InstructionTwoOperand, expression, integerSizeInstr)
+                baseInstruction = self.ssa.createOrGetRootInstruction(self.BASE_CONST)
+                baseAddrValue = self.ssa.createOrGetRootInstruction(self.getArrayBaseAddressValue(ident))
+                arrayBaseAdd = self.ssa.createInstructionInActiveBlock(Opcode.ADD, Instruction.InstructionTwoOperand, baseInstruction, baseAddrValue)           
+                reqAddress = self.ssa.createInstructionInActiveBlock(Opcode.ADDA, Instruction.InstructionTwoOperand, mulInstruction, arrayBaseAdd)
+                
+                instr = self.ssa.createInstructionInActiveBlock(Opcode.LOAD, Instruction.InstructionOneOperand, reqAddress)       
+                self.consume(Token.SQUARE_CPAREN)
+            
+            else:
+                instr = self.ssa.getSymbolValue(ident)
 
         return instr
-
-def main():
-
-    #inFile = sys.argv[1]
-    ##debug
-    inFile = "MainProject/Examples/Code7.smpl"
-    with open(inFile,'r') as i:
-        inputString = i.read()
-        
-    parser = Parser(inputString)
-    parser.computation()
-
-    dotGraph = DotGraph()
-    graph = dotGraph.getRepresentation(parser.ssa.graph)
-
-    blocks = parser.ssa.graph.blocks
-
-    for b in blocks:
-        print(b.blockName)
-        for ident, instr in b.symbolTable.items():
-            print(ident + ": " + str(instr.instructionNumber))
-    print(graph)
-
-
-      
-if __name__ =="__main__":
-    main()

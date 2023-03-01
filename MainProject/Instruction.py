@@ -7,25 +7,34 @@ class Instruction:
     InstructionNumber = 0
     def __init__(self, opcode):
         self.opcode = opcode
-        Instruction.InstructionNumber+=1
         self.instructionNumber = Instruction.InstructionNumber
+        Instruction.InstructionNumber+=1
         self.instructionString = self.opcode
         self.prevOpcodeInstr = None
         self.block = None
         self.deleteFlag = False
     
+    def getValue(self):
+        if self.instructionNumber > 0:
+            return self.instructionNumber
+        return "0?"
+
+
     def getInstructionString(self):
-        instructionString = str(self.instructionNumber) + ": " + self.opcode
+        instructionString = f"{self.instructionNumber}: {self.opcode} "
         if isinstance(self, Instruction_OneOperand):
             if isinstance(self.operand1, numbers.Number):
-                instructionString+= "#" + str(self.operand1)
+                instructionString+= f"#{self.operand1}"
+            elif isinstance(self.operand1, str):
+                instructionString+= f"{self.operand1}"
             else:
-                instructionString+= " (" + str(self.operand1.instructionNumber) + ")"
+                instructionString+= f" ({self.operand1.getValue()})"
         
         elif isinstance(self, Instruction_TwoOperand):
-            operand2String = str(self.operand2.instructionNumber if self.operand2 != None else " ")
-            instructionString+= " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + operand2String + ")"
+            operand2String = str(self.operand2.getValue() if self.operand2 != None else " ")
+            instructionString+= f"({self.operand1.getValue()}) ({operand2String})"
         self.instructionString = instructionString
+
         return instructionString
     
     def getInstructionFromSearchStructure(self):
@@ -42,9 +51,9 @@ class Instruction_OneOperand(Instruction):
         self.instructionString = self.opcode
 
         if isinstance(self.operand1, numbers.Number):
-            self.instructionString+= "#" + str(self.operand1)
+            self.instructionString+= f"#{self.operand1}"
         elif isinstance(self.operand1, Instruction_OneOperand):
-            self.instructionString+= " (" + str(self.operand1.instructionNumber) + ")"
+            self.instructionString+= f" ({self.operand1.instructionNumber})"          
 
 
 class Instruction_TwoOperand(Instruction):
@@ -55,5 +64,5 @@ class Instruction_TwoOperand(Instruction):
         self.operand2 = operand2 
 
         operand2String = str(self.operand2.instructionNumber if self.operand2 != None else " ")
-        self.instructionString = self.opcode + " (" + str(self.operand1.instructionNumber) + ")" + " " + "(" + operand2String + ")"
+        self.instructionString = f"{self.opcode} ({self.operand1.instructionNumber}) ({operand2String})"
 

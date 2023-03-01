@@ -4,10 +4,11 @@ class BasicBlock:
     number = 0
     def __init__(self, initSearchStructure=False):
         self.instructions = []
-        self.symbolTable = {}
+        self.__symbolTable = {}
         self.dominance = None
         self.fallThrough = None
         self.branch = None
+        self.kills = set()
         self.blockNumber = BasicBlock.number
         self.blockName = "BB" + str(self.blockNumber)
         BasicBlock.number+=1
@@ -17,9 +18,19 @@ class BasicBlock:
             for opcode in Opcode.ValidOpcodesForSearch:
                 self.searchStructure[opcode] = None
 
+    def getSymbolValue(self, key):
+        return self.__symbolTable.get(key)
+            
+    def getSymbolTable(self):
+        return self.__symbolTable
+
     def updateSymbolTable(self, key, value):
-        self.symbolTable[key] = value
-        value.getInstructionString()
+        self.__symbolTable[key] = value
+        if isinstance(value, Instruction.Instruction):
+            value.getInstructionString()
+
+    def copySymbolTable(self, sourceBlock):        
+        self.__symbolTable = sourceBlock.getSymbolTable().copy()
 
     def removeInstruction(self, instr):     
         instr.deleteFlag = True   
@@ -55,6 +66,7 @@ class BasicBlock:
     def searchInstruction(self, opcode, operand1=None, operand2=None, curr = None):
         
         if opcode in Opcode.ValidOpcodesForSearch:
+            #while loop code
             if curr != None:
                 instr = curr.prevOpcodeInstr
             else:
@@ -62,6 +74,8 @@ class BasicBlock:
 
             while(instr != None):
                 if instr.deleteFlag == False and instr.operand1 == operand1 and (isinstance(instr, Instruction.Instruction_OneOperand) or instr.operand2 == operand2):
+                    if instr.opcode == Opcode.KILL:
+                        return None
                     return instr
                 instr = instr.prevOpcodeInstr
         return None

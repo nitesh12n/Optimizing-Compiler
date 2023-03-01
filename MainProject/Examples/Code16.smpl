@@ -1,0 +1,26 @@
+main
+array [5] x;
+var i, y, j, k, l, m;
+{
+    let i <- call InputNum();
+    let x[1] <- 0;
+    let y <- x[2];
+    let j <- x[1];
+    while j < 10 do
+        let x[1] <- i + 1;
+        let i <- x[1] + 1;
+        let j <- j + 1;
+        while i < 20 do
+            let x[3]<- i + 2;
+        od;
+     od;
+    let k <- x[1];
+    let l <- x[2];
+    let m <- x[3];
+    call OutputNum(i);
+    call OutputNum(y);
+    call OutputNum(j);
+    call OutputNum(k);
+    call OutputNum(l);
+    call OutputNum(m)
+}.

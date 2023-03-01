@@ -1,6 +1,7 @@
 from Token import Token
 class Opcode:
     ADD = "add"
+    ADDA = "adda"
     SUB ="sub"
     MUL="mul"
     DIV ="div"
@@ -9,16 +10,19 @@ class Opcode:
     WRITENEWLINE= "writeNL"
     CONST = "const"
     CMP = "cmp"
-    EMPTY = "empty"
+    EMPTY = "\<empty\>"
     BRA = "bra"
     PHI = "phi"
+    LOAD = "load"
+    STORE = "store"
+    KILL = "kill"
     COND_EQUAL = "bne",
     COND_NOTEQUAL = "beq",
     COND_GREATERTHAN = "ble",
     COND_GREATERTHANEQUAL = "blt",
     COND_LESSTHAN = "bge",
     COND_LESSTHANEQUAL = "bgt"
-    ValidOpcodesForSearch = [ADD, SUB, MUL, DIV, CMP]
+    ValidOpcodesForSearch = [ADD, SUB, MUL, DIV, CMP, ADDA, LOAD]
     CONDITIONS = {
         Token.COND_EQUAL : "bne",
         Token.COND_NOTEQUAL : "beq",
