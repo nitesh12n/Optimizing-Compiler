@@ -13,6 +13,7 @@ class Instruction:
         self.prevOpcodeInstr = None
         self.block = None
         self.deleteFlag = False
+        self.loads = set()
     
     def getValue(self):
         if self.instructionNumber > 0:

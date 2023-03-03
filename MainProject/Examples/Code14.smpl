@@ -1,17 +1,14 @@
 main
-var a, b, c, d;
-array[4] x, arr, uarr;
+var i, j, x, y;
+array[4] a, b;
 {
-    let a <- call InputNum();
-    let b <- 2; 
-    let x[1] = a + b;
-    let x[2] = a + b;
-    let c = x[1] + 1;
-    let d = x[2] + 1;
-    let x[1] = 2;
-    let d = x[2] + 2;
-    call OutputNum(a);
-    call OutputNum(b);
-    call OutputNum(c);
-    call OutputNum(d);
+    let i <- call InputNum();
+    let j <- b[5]; 
+    let a[5] <- 5;
+    let y <- b[5]
+    call OutputNum(i);
+    call OutputNum(j);
+    call OutputNum(x);
+    call OutputNum(y);
+
 }.

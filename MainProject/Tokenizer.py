@@ -26,7 +26,7 @@ class Tokenizer:
 
         elif self.token == token:
                 return True
-        
+                
         return False
 
 

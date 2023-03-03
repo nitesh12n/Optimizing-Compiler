@@ -8,7 +8,10 @@ class DotGraph:
     def traverseInstructions(self, node):
         res = "{"
         for instruction in node.instructions:
-            res += f" {instruction.getInstructionString()} |"
+            if instruction.deleteFlag == False:
+                res += f" {instruction.getInstructionString()} |"
+            else:
+                res += f" {instruction.getInstructionString()} - deleted |"
         res = res.rstrip(res[-1])
         res += "}"
         return res

@@ -1,27 +1,23 @@
 main
-array[5] x;
+array[5] x, y;
 var a, b, c, d, e, f, g, h; {
  let a <- call InputNum();
  let b <- x[1];
  let c <- x[2];
+ let x[3] = b + a;
  let e <- x[3];
- let x[2] = b + a;
- 
  if a < 0 then 
     let x[3] <- c; 
     if b > 0 then
-        let x[1] <- d + e; 
+        let d <- d + e; 
     else 
-        let d <- d + x[3]; 
-    fi
+        let y[3] <- d + x[3]; 
+    fi;
  else 
-    let x[2] = c + 1; fi
-let e<-x[1];
-let f<-x[2];
-let g<-x[3];
+    let e = c + 1; fi
 
-call OutputNum(d);
-call OutputNum(b);
+call OutputNum(x[3]);
+call OutputNum(y[3]);
 call OutputNum(a);
 call OutputNum(c);
 call OutputNum(e);
