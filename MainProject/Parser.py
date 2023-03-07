@@ -93,6 +93,7 @@ class Parser:
         self.ssa.removeInstructionFromRoot(rootDefaultInst)
         if len(self.ssa.rootBlock.instructions) == 0:
             self.ssa.createEmptyInstruction(self.ssa.rootBlock)
+        self.ssa.createInstructionInActiveBlock(Opcode.END, Instruction.InstructionZeroOperand)
 
     def consumeStatements(self):
 

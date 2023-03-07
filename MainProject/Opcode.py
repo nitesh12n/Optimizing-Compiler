@@ -16,6 +16,7 @@ class Opcode:
     LOAD = "load"
     STORE = "store"
     KILL = "kill"
+    END = "end"
     COND_EQUAL = "bne",
     COND_NOTEQUAL = "beq",
     COND_GREATERTHAN = "ble",
