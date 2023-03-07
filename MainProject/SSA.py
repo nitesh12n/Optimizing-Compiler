@@ -16,6 +16,7 @@ class SSA:
         self.useChain = {}
         self.uninitializedVar = set()
         self.arrayDimensions = {}
+        self.phis = set()
 
     def getNextInstructionNumber(self):
         self.instructionCounter+=1
@@ -26,8 +27,9 @@ class SSA:
     
     def getSymbolValue(self, key):
         value = self.activeBlock.getSymbolValue(key)
-        if isinstance(value, Instruction.Instruction) and value.instructionNumber == 0:
-            self.uninitializedVar.add(key) 
+        if isinstance(value, Instruction.Instruction):
+            if value.instructionNumber == 0 or (value.opcode==Opcode.PHI and value.operand1 != None and value.operand1.instructionNumber==0):
+                self.uninitializedVar.add(key) 
         return value
 
     def createInstructionInActiveBlock(self, opcode, instType, operand1=None, operand2=None, ignoreSearchStructure=False, createAtTop=False):
@@ -61,6 +63,8 @@ class SSA:
 
     def createWhileBlocks(self):
         
+        if len(self.activeBlock.instructions) == 0:
+            self.createEmptyInstruction(self.activeBlock)
         joinBlock = self.graph.createNewBlock()
         joinInstr = self.createEmptyInstruction(joinBlock)
         fallThrough = self.graph.createNewBlock()
@@ -88,7 +92,6 @@ class SSA:
         branch.dominance = self.activeBlock   
         fallThrough.dominance = self.activeBlock
 
-        fallThrough.copySymbolTable(self.activeBlock)
         fallThrough.branch = joinBlock
 
         ## we should copy from joinBlock after everything is done?
@@ -97,19 +100,25 @@ class SSA:
         #create phis
         for ident, instr in joinBlock.getSymbolTable().items():
             joinInstr = self.createInstructionInActiveBlock(Opcode.PHI, Instruction.Instruction.InstructionTwoOperand, instr)
+            self.updateUseChain(joinInstr.operand1, joinInstr)
             joinBlock.updateSymbolTable(ident, joinInstr)
         
         for ident in self.arrayDimensions.keys():
             kill = self.updateSearchStructureForLoad(ident, joinBlock)
             joinBlock.preAddedKills.add(kill)
+        
+        fallThrough.copySymbolTable(self.activeBlock)
 
         return branch, fallThrough, joinBlock  
 
     def updateJoinForWhile(self, branch, oldfallThrough, fallThrough, join):
 
-        for ident, fallThroughInstr in fallThrough.getSymbolTable().items():
+        idents = list(fallThrough.getSymbolTable().keys())
+        for ident in idents:
             joinPhiInstr = join.getSymbolValue(ident)
-
+            fallThroughInstr = fallThrough.getSymbolValue(ident)
+            
+            #TODO:
             if fallThroughInstr != joinPhiInstr and fallThroughInstr != joinPhiInstr.operand1:
                 joinPhiInstr.operand2 = fallThroughInstr
                 self.updateUseChain(joinPhiInstr.operand2, joinPhiInstr)
@@ -133,7 +142,7 @@ class SSA:
             ident = kill.operand1
 
             if self.searchKillInSet(kill, kills) == False:
-                kill.deleteFlag = True
+                join.removeInstruction(kill)
                 for load in kill.loads:
                     modified.append(load)
             else:
@@ -191,7 +200,7 @@ class SSA:
     def deletePhi(self, join, ident):
         modified = []
         joinPhiInstr = join.getSymbolValue(ident)
-        if joinPhiInstr.operand2 == None:
+        if joinPhiInstr.operand2 == None or joinPhiInstr.operand2 == joinPhiInstr.operand1:
             originalValue = joinPhiInstr.operand1
             useChain = self.useChain.get(joinPhiInstr.instructionNumber)   
             if useChain != None:
@@ -200,21 +209,34 @@ class SSA:
                         modified.append(instr)
                         if instr.operand1 == joinPhiInstr:
                             instr.operand1 = originalValue
+                            self.updateUseChain(instr.operand1, instr)
+                            instr.getInstructionString()
                         if isinstance(instr, Instruction.Instruction_TwoOperand) and instr.operand2 == joinPhiInstr:
                             instr.operand2 = originalValue
+                            self.updateUseChain(instr.operand2, instr)
+                            instr.getInstructionString()
 
             #join.instructions.remove(joinPhiInstr)
             join.removeInstruction(joinPhiInstr)
             join.updateSymbolTable(ident, originalValue)
+            self.updateModifiedInstructions(modified)
 
+        ##check again if need to update symbol table          
+        
+    def updateModifiedInstructions(self, modified):
         while(len(modified) > 0):
             curr = modified.pop()
-            if curr.opcode == Opcode.ADDA:
+            if curr.opcode == Opcode.ADDA or curr.deleteFlag == True:
                 continue
+
             block = curr.block
             prevInstr = curr.getInstructionFromSearchStructure()
+                
             if prevInstr != None:
                 block.removeInstruction(curr)
+                key = block.getSymbolTableKey(curr)
+                if key != None:
+                    block.updateSymbolTable(key, prevInstr)
 
                 useChain = self.useChain.get(curr.instructionNumber)
                 if useChain != None:
@@ -223,11 +245,15 @@ class SSA:
                             modified.append(instr)                          
                             if instr.operand1 == curr:
                                 instr.operand1 = prevInstr
+                                self.updateUseChain(instr.operand1, instr)
+                                instr.getInstructionString()
                             if isinstance(instr, Instruction.Instruction_TwoOperand) and instr.operand2 == curr:
                                 instr.operand2 = prevInstr
+                                self.updateUseChain(instr.operand2, instr)
+                                instr.getInstructionString()
 
-        ##check again if need to update symbol table          
-               
+
+
     def createIfElseBlocks(self, relOp, cmpInstruction):
 
         branch = self.graph.createNewBlock()
@@ -316,6 +342,8 @@ class SSA:
 
             if joinInstr == None or  tempBranch.getSymbolValue(ident) != tempFallThrough.getSymbolValue(ident):
                 joinInstr = self.createNewInstruction(join, Opcode.PHI, Instruction.Instruction.InstructionTwoOperand, tempFallThrough.getSymbolValue(ident), tempBranch.getSymbolValue(ident))
+                self.updateUseChain(joinInstr.operand1, joinInstr)
+                self.updateUseChain(joinInstr.operand2, joinInstr)
                 join.updateSymbolTable(ident, joinInstr)
                 joinInstr.getInstructionString()
         

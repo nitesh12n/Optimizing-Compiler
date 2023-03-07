@@ -1,0 +1,36 @@
+digraph G {
+BB0 [shape=record, label="<b>BB0 | { 1: const #5 | 3: const #0 | 4: const #1 | 5: const #100 | 6: const #4 | 8: const #BASE | 9: const #arra_base_adr | 25: const #10 | 29: const #b_base_adr | 34: const #2 | 35: const #3 | 43: const #110 | 58: const #6 | 64: const #11099 | 72: const #17 }"];
+BB1 [shape=record, label="<b>BB1 | { 2: read  | 7: mul (4) (6) | 10: add (8) (9) | 11: adda (7) (10) | 12: store (5) (11) | 13: kill arra | 14: adda (7) (10) | 15: load  (14) | 16: write  (15) }"];
+BB2 [shape=record, label="<b>BB2 | { 17: \<empty\>  | 24: kill b | 23: kill arra | 19: phi (3) (28) | 20: phi (3) (33) | 21: phi (2) (54) | 26: cmp (19) (25) | 27: bge (26) (18) }"];
+BB3 [shape=record, label="<b>BB3 | { 28: add (21) (4) | 30: add (8) (29) | 31: adda (7) (30) | 32: load  (31) | 33: add (32) (4) | 36: add (34) (35) | 37: adda (7) (30) | 38: store (36) (37) | 39: kill b | 40: adda (7) (10) | 41: load  (40) | 42: write  (41) | 44: adda (7) (10) | 45: store (43) (44) | 46: kill arra | 47: adda (7) (10) | 48: load  (47) | 49: write  (48) }"];
+BB4 [shape=record, label="<b>BB4 | { 18: \<empty\>  | 82: write  (19) | 83: adda (7) (10) | 84: load  (83) | 85: write  (84) }"];
+BB5 [shape=record, label="<b>BB5 | { 50: \<empty\>  | 56: kill arra | 54: phi (21) (71) | 59: cmp (28) (58) | 60: bge (59) (51) }"];
+BB6 [shape=record, label="<b>BB6 | { 61: adda (7) (10) | 62: load  (61) | 63: write  (62) | 65: adda (7) (10) | 66: store (64) (65) | 67: kill arra | 68: adda (7) (10) | 69: load  (68) | 70: write  (69) | 71: add (54) (4) | 73: cmp (71) (72) | 76: bge (73) (74) }"];
+BB7 [shape=record, label="<b>BB7 | { 51: \<empty\>  | 81: bra  (17) }"];
+BB8 [shape=record, label="<b>BB8 | { 74: \<empty\>  }"];
+BB9 [shape=record, label="<b>BB9 | { 77: write  (69) | 78: bra  (75) }"];
+BB10 [shape=record, label="<b>BB10 | { 75: \<empty\>  | 79: write  (69) | 80: bra  (50) }"];
+BB0:s -> BB1:n [color= darkgreen, label="FT"];
+BB1:s -> BB2:n [color= darkgreen, label="FT"];
+BB0:b -> BB1:b [color=blue, style=dotted, label="dom"]
+BB2:s -> BB4:n [color= darkorange,label="branch"];
+BB2:s -> BB3:n [color= darkgreen, label="FT"];
+BB1:b -> BB2:b [color=blue, style=dotted, label="dom"]
+BB3:s -> BB5:n [color= darkgreen, label="FT"];
+BB2:b -> BB3:b [color=blue, style=dotted, label="dom"]
+BB2:b -> BB4:b [color=blue, style=dotted, label="dom"]
+BB5:s -> BB7:n [color= darkorange,label="branch"];
+BB5:s -> BB6:n [color= darkgreen, label="FT"];
+BB3:b -> BB5:b [color=blue, style=dotted, label="dom"]
+BB6:s -> BB8:n [color= darkorange,label="branch"];
+BB6:s -> BB9:n [color= darkgreen, label="FT"];
+BB5:b -> BB6:b [color=blue, style=dotted, label="dom"]
+BB7:s -> BB2:n [color= darkorange,label="branch"];
+BB5:b -> BB7:b [color=blue, style=dotted, label="dom"]
+BB8:s -> BB10:n [color= darkgreen, label="FT"];
+BB6:b -> BB8:b [color=blue, style=dotted, label="dom"]
+BB9:s -> BB10:n [color= darkorange,label="branch"];
+BB6:b -> BB9:b [color=blue, style=dotted, label="dom"]
+BB10:s -> BB5:n [color= darkorange,label="branch"];
+BB6:b -> BB10:b [color=blue, style=dotted, label="dom"]
+}

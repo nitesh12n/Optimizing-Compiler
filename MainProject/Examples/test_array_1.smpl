@@ -25,10 +25,7 @@ array[5] arra, b;
             fi;
             call OutputNum(arra[1]); 
         od; 
-        let i <-i + 1 
     od; 
     call OutputNum(x);
 	call OutputNum(arra[1]);
-    call OutputNum(b[1]);
-    call OutputNum(b[1]);
 }.

@@ -21,7 +21,7 @@ var a, i;
 		call OutputNum(arrA[i]);
 	fi;
 	
-		
+	
 	call OutputNum(arrA[i]);
 
 }.

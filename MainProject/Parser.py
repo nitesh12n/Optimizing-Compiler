@@ -91,6 +91,8 @@ class Parser:
         self.consume(Token.RCPAREN)
         self.consume(Token.DOT)
         self.ssa.removeInstructionFromRoot(rootDefaultInst)
+        if len(self.ssa.rootBlock.instructions) == 0:
+            self.ssa.createEmptyInstruction(self.ssa.rootBlock)
 
     def consumeStatements(self):
 
@@ -109,7 +111,7 @@ class Parser:
         branch, fallThrough, join = self.ssa.createWhileBlocks()
         
         
-        relOp, cmpInstruction = self.consumeRelation(True)
+        relOp, cmpInstruction = self.consumeRelation()
         self.ssa.createInstructionInActiveBlock(relOp, Instruction.InstructionTwoOperand, cmpInstruction, branch.instructions[0])
         self.consume(Token.DO)
         fallThrough.searchStructure = self.ssa.activeBlock.searchStructure.copy()
@@ -151,7 +153,11 @@ class Parser:
         self.consume(Token.FI)
         if self.match(Token.SEMI_COLON):
             self.consume(Token.SEMI_COLON)
+
+        if len(fallThrough.instructions) == 0:
+            self.ssa.createEmptyInstruction(fallThrough) 
         self.ssa.activeBlock = join
+
 
         ##find current branch and fallthrough and calculate phi
         self.ssa.updateJoinforIf(branch, fallThrough, join)
@@ -161,7 +167,6 @@ class Parser:
         relOp = self.getAndConsumeRelOp()
         rightOperand = self.getAndConsumeExpression(ignoreSearchStructure)
         instruction = self.ssa.createInstructionInActiveBlock(Opcode.CMP, Instruction.InstructionTwoOperand, leftOperand, rightOperand)
-
         return relOp, instruction
 
     def getAndConsumeRelOp(self):
@@ -296,7 +301,7 @@ class Parser:
         arrayBaseAdd = self.ssa.createInstructionInActiveBlock(Opcode.ADD, Instruction.InstructionTwoOperand, baseInstruction, baseAddrValue)           
         
         reqAddress = self.ssa.createInstructionInActiveBlock(Opcode.ADDA, Instruction.InstructionTwoOperand, mulInstruction, arrayBaseAdd, ignoreSearchStructure=True)
-        storeInst = self.ssa.createInstructionInActiveBlock(Opcode.STORE, Instruction.InstructionTwoOperand, reqAddress, instruction)
+        storeInst = self.ssa.createInstructionInActiveBlock(Opcode.STORE, Instruction.InstructionTwoOperand, instruction, reqAddress)
         self.ssa.updateSearchStructureForLoad(ident, self.ssa.activeBlock, False)
         self.ssa.activeBlock.kills.add(ident)
         return storeInst

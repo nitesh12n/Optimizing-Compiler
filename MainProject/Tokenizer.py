@@ -14,6 +14,10 @@ class Tokenizer:
         return self.token
 
     def consume(self, pattern):  
+        if isinstance(pattern, re.Pattern) == False:
+            if pattern != self.token:
+                print(f"Warning! Token {self.token} not matching with pattern {pattern}")
+
         self.index+= len(self.token)
         self.tokenize()  
 

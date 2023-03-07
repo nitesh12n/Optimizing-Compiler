@@ -5,7 +5,7 @@ def main():
 
     #inFile = sys.argv[1]
     ##debug
-    inFile = "MainProject/Examples/Code17.smpl"
+    inFile = "MainProject/Examples/test_array_1.smpl"
     with open(inFile,'r') as i:
         inputString = i.read()
         
@@ -16,7 +16,8 @@ def main():
     graph = dotGraph.getRepresentation(parser.ssa.graph)
 
     if len(parser.ssa.uninitializedVar) > 0:
-        print("These uninitialized variables were used: " + ", ".join(parser.ssa.uninitializedVar))
+        print("\nThese uninitialized variables were used: " + ", ".join(parser.ssa.uninitializedVar))
+        print("\n")
     print(graph)
     
     file = open('MainProject/output.txt', 'w')
@@ -26,3 +27,5 @@ def main():
  
 if __name__ =="__main__":
     main()
+
+    

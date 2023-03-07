@@ -24,6 +24,11 @@ class BasicBlock:
             
     def getSymbolTable(self):
         return self.__symbolTable
+    
+    def getSymbolTableKey(self, instr):
+        for key, value in self.__symbolTable.items():          
+            if instr == value:
+                return key
 
     def updateSymbolTable(self, key, value):
         self.__symbolTable[key] = value
@@ -34,8 +39,9 @@ class BasicBlock:
         self.__symbolTable = sourceBlock.getSymbolTable().copy()
 
     def removeInstruction(self, instr):     
-        instr.deleteFlag = True   
-        self.instructions.remove(instr)
+        instr.deleteFlag = True
+        if instr in self.instructions:   
+            self.instructions.remove(instr)
 
     def createNewInstruction(self, opcode, instType, operand1=None, operand2=None, ignoreSearchStructure=False, createAtTop=False):
      
@@ -60,6 +66,7 @@ class BasicBlock:
             self.searchStructure[opcode] = instr
 
         instr.block = self
+
         ##check
         if createAtTop:
             if len(self.instructions) > 0 and self.instructions[0].opcode == Opcode.EMPTY: 

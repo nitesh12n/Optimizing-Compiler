@@ -1,0 +1,12 @@
+main 
+var x,y,i,j; 
+{
+    let i<-5; 
+    while x != 0 do
+        let i<-5; 
+		call OutputNum(x);
+        call OutputNum(y);
+        call OutputNum(i);
+        call OutputNum(j);
+    od; 
+}.
