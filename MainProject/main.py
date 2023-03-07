@@ -5,7 +5,7 @@ def main():
 
     #inFile = sys.argv[1]
     ##debug
-    inFile = "MainProject/Examples/test_array_1.smpl"
+    inFile = "MainProject/Examples/Code2.smpl"
     with open(inFile,'r') as i:
         inputString = i.read()
         
