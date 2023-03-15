@@ -111,7 +111,6 @@ class Parser:
         self.consume(Token.WHILE)
         branch, fallThrough, join = self.ssa.createWhileBlocks()
         
-        
         relOp, cmpInstruction = self.consumeRelation()
         self.ssa.createInstructionInActiveBlock(relOp, Instruction.InstructionTwoOperand, cmpInstruction, branch.instructions[0])
         self.consume(Token.DO)

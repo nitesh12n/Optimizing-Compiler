@@ -79,7 +79,7 @@ class BasicBlock:
 
     def searchInstruction(self, opcode, operand1=None, operand2=None, curr = None):
         
-        if opcode in Opcode.ValidOpcodesForSearch:
+        if opcode in Opcode.ValidOpcodesForSearch or opcode in Opcode.ValidOpcodesForWhileSearch:
             #while loop code
             if curr != None:
                 instr = curr.prevOpcodeInstr

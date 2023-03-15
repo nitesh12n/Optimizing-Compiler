@@ -24,6 +24,8 @@ class Opcode:
     COND_LESSTHAN = "bge",
     COND_LESSTHANEQUAL = "bgt"
     ValidOpcodesForSearch = [ADD, SUB, MUL, DIV, CMP, ADDA, LOAD]
+    ValidOpcodesForWhileSearch = [ADD, SUB, MUL, DIV, CMP]
+
     CONDITIONS = {
         Token.COND_EQUAL : "bne",
         Token.COND_NOTEQUAL : "beq",

@@ -17,6 +17,7 @@ class SSA:
         self.uninitializedVar = set()
         self.arrayDimensions = {}
         self.phis = set()
+        self.currentWhileBlocks = set()
 
     def getNextInstructionNumber(self):
         self.instructionCounter+=1
@@ -112,7 +113,7 @@ class SSA:
         return branch, fallThrough, joinBlock  
 
     def updateJoinForWhile(self, branch, oldfallThrough, fallThrough, join):
-
+        flag = False
         idents = list(fallThrough.getSymbolTable().keys())
         for ident in idents:
             joinPhiInstr = join.getSymbolValue(ident)
@@ -123,12 +124,49 @@ class SSA:
                 joinPhiInstr.operand2 = fallThroughInstr
                 self.updateUseChain(joinPhiInstr.operand2, joinPhiInstr)
             else:
-                self.deletePhi(join, ident)
+                flag = self.deletePhi(join, ident)
 
         self.deleteKills(branch, oldfallThrough, fallThrough, join)
 
         branch.copySymbolTable(join)
         branch.searchStructure = join.searchStructure.copy()
+        
+        if flag == True:
+            self.currentWhileBlocks = set()
+            self.traverseWhileBlocks(join.fallThrough, join)
+            self.runCommonSubexpressionElimination(join, self.currentWhileBlocks)
+            self.currentWhileBlocks = set()
+
+        
+    def runCommonSubexpressionElimination(self, join, blocks):
+
+        
+        modified = []
+        for block in blocks:
+            instructions = block.instructions
+            for instruction in instructions:
+                if instruction.opcode in Opcode.ValidOpcodesForWhileSearch:
+                    prevInstr = block.searchInstruction(instruction.opcode, instruction.operand1, instruction.operand2, instruction)
+                    if prevInstr != None:
+                        modified.append(instruction)
+
+        if len(modified) > 0:
+            self.updateModifiedInstructions(modified)
+            self.runCommonSubexpressionElimination(join, blocks)
+
+
+    def traverseWhileBlocks(self, block, join):
+
+        if block is None or block == join or block in self.currentWhileBlocks:
+            return
+        
+        self.currentWhileBlocks.add(block)
+
+        self.traverseWhileBlocks(block.branch, join)
+        self.traverseWhileBlocks(block.fallThrough, join)    
+
+    
+
 
     def deleteKills(self, branch, oldfallThrough, fallThrough, join):
                
@@ -198,6 +236,7 @@ class SSA:
 
 
     def deletePhi(self, join, ident):
+        flag = False
         modified = []
         joinPhiInstr = join.getSymbolValue(ident)
         if joinPhiInstr.operand2 == None or joinPhiInstr.operand2 == joinPhiInstr.operand1:
@@ -219,18 +258,25 @@ class SSA:
             #join.instructions.remove(joinPhiInstr)
             join.removeInstruction(joinPhiInstr)
             join.updateSymbolTable(ident, originalValue)
-            self.updateModifiedInstructions(modified)
+            res = self.updateModifiedInstructions(modified)
+            if res == True:
+                flag = True
 
+        return flag
         ##check again if need to update symbol table          
         
     def updateModifiedInstructions(self, modified):
+        flag = False
         while(len(modified) > 0):
             curr = modified.pop()
             if curr.opcode == Opcode.ADDA or curr.deleteFlag == True:
                 continue
-
+            
             block = curr.block
-            prevInstr = curr.getInstructionFromSearchStructure()
+            if curr.opcode == Opcode.PHI and curr.operand1 == curr.operand2:
+                prevInstr = curr.operand1
+            else:
+                prevInstr = curr.getInstructionFromSearchStructure()
                 
             if prevInstr != None:
                 block.removeInstruction(curr)
@@ -251,6 +297,13 @@ class SSA:
                                 instr.operand2 = prevInstr
                                 self.updateUseChain(instr.operand2, instr)
                                 instr.getInstructionString()
+
+            elif prevInstr == None and curr.opcode in Opcode.ValidOpcodesForWhileSearch:
+                flag = True
+
+        return flag
+
+                        
 
 
 
