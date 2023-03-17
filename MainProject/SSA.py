@@ -135,7 +135,7 @@ class SSA:
         self.currentWhileBlocks = set()
         self.traverseWhileBlocks(join.fallThrough, join)
         self.currentWhileBlocks.add(join)
-        threshold=50
+        threshold=10
         self.runCommonSubexpressionElimination(join, self.currentWhileBlocks, threshold)
         self.currentWhileBlocks = set()
 

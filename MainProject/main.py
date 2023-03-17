@@ -5,7 +5,7 @@ def main():
 
     #inFile = sys.argv[1]
     ##debug
-    inFile = "MainProject/Examples/gitprograms.smpl"
+    inFile = "MainProject/testprogram.smpl"
     with open(inFile,'r') as i:
         inputString = i.read()
         
