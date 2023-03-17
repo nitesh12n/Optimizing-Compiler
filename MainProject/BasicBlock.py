@@ -41,6 +41,7 @@ class BasicBlock:
     def removeInstruction(self, instr):     
         instr.deleteFlag = True
         if instr in self.instructions:   
+            #pass
             self.instructions.remove(instr)
 
     def createNewInstruction(self, opcode, instType, operand1=None, operand2=None, ignoreSearchStructure=False, createAtTop=False):

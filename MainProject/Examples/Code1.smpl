@@ -3,7 +3,7 @@ var a, b, c, d, e;
 var f;
  {
 let a <- call InputNum();
-let b <- 0;
+let b <- call InputNum(  );
 let e <- d;
 let a<-e + b + c;
 let f<-a

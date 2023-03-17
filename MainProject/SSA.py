@@ -120,7 +120,7 @@ class SSA:
             fallThroughInstr = fallThrough.getSymbolValue(ident)
             
             #TODO:
-            if fallThroughInstr != joinPhiInstr and fallThroughInstr != joinPhiInstr.operand1:
+            if fallThroughInstr.deleteFlag == False and fallThroughInstr != joinPhiInstr and fallThroughInstr != joinPhiInstr.operand1:
                 joinPhiInstr.operand2 = fallThroughInstr
                 self.updateUseChain(joinPhiInstr.operand2, joinPhiInstr)
             else:
@@ -131,28 +131,31 @@ class SSA:
         branch.copySymbolTable(join)
         branch.searchStructure = join.searchStructure.copy()
         
-        if flag == True:
-            self.currentWhileBlocks = set()
-            self.traverseWhileBlocks(join.fallThrough, join)
-            self.runCommonSubexpressionElimination(join, self.currentWhileBlocks)
-            self.currentWhileBlocks = set()
+        #if flag == True:
+        self.currentWhileBlocks = set()
+        self.traverseWhileBlocks(join.fallThrough, join)
+        self.currentWhileBlocks.add(join)
+        threshold=50
+        self.runCommonSubexpressionElimination(join, self.currentWhileBlocks, threshold)
+        self.currentWhileBlocks = set()
 
         
-    def runCommonSubexpressionElimination(self, join, blocks):
-
+    def runCommonSubexpressionElimination(self, join, blocks, threshold):
+        if threshold <=0:
+            return
         
         modified = []
         for block in blocks:
             instructions = block.instructions
             for instruction in instructions:
-                if instruction.opcode in Opcode.ValidOpcodesForWhileSearch:
+                if instruction.deleteFlag == False and instruction.opcode in Opcode.ValidOpcodesForWhileSearch:
                     prevInstr = block.searchInstruction(instruction.opcode, instruction.operand1, instruction.operand2, instruction)
                     if prevInstr != None:
                         modified.append(instruction)
 
         if len(modified) > 0:
             self.updateModifiedInstructions(modified)
-            self.runCommonSubexpressionElimination(join, blocks)
+            self.runCommonSubexpressionElimination(join, blocks, threshold - 1)
 
 
     def traverseWhileBlocks(self, block, join):
@@ -186,7 +189,8 @@ class SSA:
             else:
                 finalKills.add(kill.operand1)
 
-
+            self.updateModifiedInstructions(modified, ident)
+            '''
             while(len(modified) > 0):
                 curr = modified.pop()
                 if curr.opcode == Opcode.ADDA:
@@ -204,6 +208,7 @@ class SSA:
                         block.removeInstruction(curr)
                 
                 if prevInstr != None:
+                    
                     useChain = self.useChain.get(curr.instructionNumber)
                     if useChain != None:
                         for instr in useChain:
@@ -214,7 +219,7 @@ class SSA:
                                 if isinstance(instr, Instruction.Instruction_TwoOperand) and instr.operand2 == curr:
                                     instr.operand2 = prevInstr
 
-                                    
+            '''
         if branch.fallThrough != None or branch.branch != None:
             branch.kills.update(finalKills)
             
@@ -265,7 +270,7 @@ class SSA:
         return flag
         ##check again if need to update symbol table          
         
-    def updateModifiedInstructions(self, modified):
+    def updateModifiedInstructions(self, modified, ident=None):
         flag = False
         while(len(modified) > 0):
             curr = modified.pop()
@@ -275,6 +280,11 @@ class SSA:
             block = curr.block
             if curr.opcode == Opcode.PHI and curr.operand1 == curr.operand2:
                 prevInstr = curr.operand1
+            elif curr.opcode == Opcode.LOAD:
+                    previousADDA = block.searchInstruction(Opcode.ADDA, curr.operand1.operand1, curr.operand1.operand2, curr.operand1)
+                    prevInstr, _ = block.searchInstructionForLoad(Opcode.LOAD, previousADDA, ident=ident)
+                    if prevInstr != None:
+                        block.removeInstruction(curr.operand1)
             else:
                 prevInstr = curr.getInstructionFromSearchStructure()
                 

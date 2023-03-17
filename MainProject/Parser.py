@@ -185,6 +185,7 @@ class Parser:
         elif self.match(Token.WRITENEWLINE):
             self.consume(Token.WRITENEWLINE)
             self.ssa.createInstructionInActiveBlock(Opcode.WRITENEWLINE, Instruction.InstructionZeroOperand)
+            self.consume(Token.CPAREN)
         
         if self.match(Token.SEMI_COLON):
             self.consume(Token.SEMI_COLON)
@@ -204,6 +205,7 @@ class Parser:
             if self.match(Token.READINPUT):
                 self.consume(Token.READINPUT)
                 instruction = self.ssa.createInstructionInActiveBlock(Opcode.READ, Instruction.InstructionZeroOperand)
+                self.consume(Token.CPAREN)
         else:
             instruction = self.getAndConsumeExpression()
 
